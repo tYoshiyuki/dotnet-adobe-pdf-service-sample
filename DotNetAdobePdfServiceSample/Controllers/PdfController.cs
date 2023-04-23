@@ -1,9 +1,8 @@
 ﻿using System.Net;
 using DotNetEasyPdfSample.Web.Models;
 using Microsoft.AspNetCore.Mvc;
-using Adobe.PDFServicesSDK.io;
-using Adobe.PDFServicesSDK.pdfops;
-using ExecutionContext = Adobe.PDFServicesSDK.ExecutionContext;
+using DotNetAdobePdfServiceSample.Lib.Interfaces;
+using DotNetAdobePdfServiceSample.Lib;
 
 namespace DotNetAdobePdfServiceSample.Controllers
 {
@@ -14,15 +13,15 @@ namespace DotNetAdobePdfServiceSample.Controllers
     [ApiController]
     public class PdfController : Controller
     {
-        private readonly ExecutionContext executionContext;
+        private readonly IAdobePdfService _adobePdfService;
 
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        /// <param name="executionContext"></param>
-        public PdfController(ExecutionContext executionContext)
+        /// <param name="adobePdfService"><see cref="IAdobePdfService"/></param>
+        public PdfController(IAdobePdfService adobePdfService)
         {
-            this.executionContext = executionContext;
+            _adobePdfService = adobePdfService;
         }
 
         /// <summary>
@@ -36,50 +35,18 @@ namespace DotNetAdobePdfServiceSample.Controllers
         {
             try
             {
-                var createPdfOperation = CreatePDFOperation.CreateNew();
-
-                string mediaType;
                 var file = request.File;
-                var extension = Path.GetExtension(file.FileName);
-                
-                // NOTE 拡張子によってメディアタイプを選定します。必要に応じて判定処理を追加します。
-                if (extension.Contains(".doc", StringComparison.OrdinalIgnoreCase))
-                {
-                    mediaType = CreatePDFOperation.SupportedSourceFormat.DOC.GetMediaType();
-                }
-                else if(extension.Contains(".docx", StringComparison.OrdinalIgnoreCase))
-                {
-                    mediaType = CreatePDFOperation.SupportedSourceFormat.DOCX.GetMediaType();
-                }
-                else if (extension.Contains(".xls", StringComparison.OrdinalIgnoreCase))
-                {
-                    mediaType = CreatePDFOperation.SupportedSourceFormat.XLS.GetMediaType();
-                }
-                else if (extension.Contains(".xlsx", StringComparison.OrdinalIgnoreCase))
-                {
-                    mediaType = CreatePDFOperation.SupportedSourceFormat.XLSX.GetMediaType();
-                }
-                else
-                {
-                    return Problem($"Not supported file type:{extension}.", statusCode: (int)HttpStatusCode.BadRequest);
-                }
-
-                // 入力ファイルを FileRef に変換
                 using var inputStream = new MemoryStream();
                 await file.CopyToAsync(inputStream);
-                inputStream.Position = 0;
-                var source = FileRef.CreateFromStream(inputStream, mediaType);
-                createPdfOperation.SetInput(source);
 
                 // 変換処理の実行
-                var result = createPdfOperation.Execute(executionContext);
-
-                // FileRef を Stream に変換
-                var outputStream = new MemoryStream();
-                result.SaveAs(outputStream);
-                outputStream.Position = 0;
+                var outputStream = _adobePdfService.ConvertToPdf(inputStream, file.FileName);
 
                 return File(outputStream, "application/octet-stream", fileDownloadName: Path.GetFileNameWithoutExtension(file.FileName) + DateTime.Now.Ticks + ".pdf");
+            }
+            catch (AdobePdfServiceException ex)
+            {
+                return Problem(ex.Message, statusCode: (int)HttpStatusCode.BadRequest);
             }
             catch (Exception ex)
             {
@@ -100,39 +67,25 @@ namespace DotNetAdobePdfServiceSample.Controllers
         {
             try
             {
-                var combineFilesOperation = CombineFilesOperation.CreateNew();
-
                 var file1 = request.File1;
                 var file2 = request.File2;
 
-                var extension1 = Path.GetExtension(file1.FileName);
-                var extension2 = Path.GetExtension(file2.FileName);
+                string extension1 = Path.GetExtension(file1.FileName);
+                string extension2 = Path.GetExtension(file2.FileName);
 
                 if (!extension1.Contains(".pdf", StringComparison.InvariantCultureIgnoreCase) || !extension2.Contains(".pdf", StringComparison.InvariantCultureIgnoreCase))
                 {
                     return Problem("File type must be pdf.", statusCode: (int)HttpStatusCode.BadRequest);
                 }
 
-                // 入力ファイルを FileRef に変換
                 using var inputStream1 = new MemoryStream();
                 await file1.CopyToAsync(inputStream1);
-                inputStream1.Position = 0;
-                var source1 = FileRef.CreateFromStream(inputStream1, CombineFilesOperation.SupportedSourceFormat.PDF.GetMediaType());
-                combineFilesOperation.AddInput(source1);
 
                 using var inputStream2 = new MemoryStream();
                 await file1.CopyToAsync(inputStream2);
-                inputStream2.Position = 0;
-                var source2 = FileRef.CreateFromStream(inputStream2, CombineFilesOperation.SupportedSourceFormat.PDF.GetMediaType());
-                combineFilesOperation.AddInput(source2);
 
                 // マージ処理の実行
-                var result = combineFilesOperation.Execute(executionContext);
-
-                // FileRef を Stream に変換
-                var outputStream = new MemoryStream();
-                result.SaveAs(outputStream);
-                outputStream.Position = 0;
+                var outputStream = _adobePdfService.MergePdf(inputStream1, inputStream2);
 
                 return File(outputStream, "application/octet-stream", fileDownloadName: "Merged" + DateTime.Now.Ticks + ".pdf");
             }

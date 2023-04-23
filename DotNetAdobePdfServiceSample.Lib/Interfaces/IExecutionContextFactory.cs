@@ -1,6 +1,6 @@
 ﻿using ExecutionContext = Adobe.PDFServicesSDK.ExecutionContext;
 
-namespace DotNetAdobePdfServiceSample.Services
+namespace DotNetAdobePdfServiceSample.Lib.Interfaces
 {
     /// <summary>
     /// <see cref="ExecutionContext"/> を生成するインターフェースです。

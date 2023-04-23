@@ -13,6 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DotNetAdobePdfServiceSample.Lib\DotNetAdobePdfServiceSample.Lib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="private.key">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
