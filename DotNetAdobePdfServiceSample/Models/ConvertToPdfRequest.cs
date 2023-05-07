@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace DotNetEasyPdfSample.Web.Models
+namespace DotNetAdobePdfServiceSample.Models
 {
     /// <summary>
     /// PDF変換リクエスト

@@ -1,8 +1,8 @@
 ﻿using System.Net;
-using DotNetEasyPdfSample.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using DotNetAdobePdfServiceSample.Lib.Interfaces;
 using DotNetAdobePdfServiceSample.Lib;
+using DotNetAdobePdfServiceSample.Models;
 
 namespace DotNetAdobePdfServiceSample.Controllers
 {
