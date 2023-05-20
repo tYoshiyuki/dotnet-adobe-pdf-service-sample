@@ -69,18 +69,15 @@ namespace DotNetAdobePdfServiceSample.Lib
         }
 
         /// <inheritdoc />
-        public Stream MergePdf(Stream stream1, Stream stream2)
+        public Stream MergePdfList(IEnumerable<Stream> streams)
         {
             var combineFilesOperation = CombineFilesOperation.CreateNew();
 
             // 入力ファイルを FileRef に変換
-            stream1.Position = 0;
-            var source1 = FileRef.CreateFromStream(stream1, CombineFilesOperation.SupportedSourceFormat.PDF.GetMediaType());
-            combineFilesOperation.AddInput(source1);
-
-            stream2.Position = 0;
-            var source2 = FileRef.CreateFromStream(stream2, CombineFilesOperation.SupportedSourceFormat.PDF.GetMediaType());
-            combineFilesOperation.AddInput(source2);
+            foreach (var stream in streams)
+            {
+                combineFilesOperation.AddInput(CreateMergePdfFileRef(stream));
+            }
 
             // マージ処理の実行
             var result = combineFilesOperation.Execute(_executionContext);
@@ -93,28 +90,15 @@ namespace DotNetAdobePdfServiceSample.Lib
             return outputStream;
         }
 
-        /// <inheritdoc />
-        public Stream MergePdfList(IEnumerable<Stream> streams)
+        /// <summary>
+        /// PDFマージ向けに<see cref="Stream"/>を元に<see cref="FileRef"/>を生成します。
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <returns></returns>
+        private static FileRef CreateMergePdfFileRef(Stream stream)
         {
-            var combineFilesOperation = CombineFilesOperation.CreateNew();
-
-            // 入力ファイルを FileRef に変換
-            foreach (var stream in streams)
-            {
-                stream.Position = 0;
-                var source = FileRef.CreateFromStream(stream, CombineFilesOperation.SupportedSourceFormat.PDF.GetMediaType());
-                combineFilesOperation.AddInput(source);
-            }
-
-            // マージ処理の実行
-            var result = combineFilesOperation.Execute(_executionContext);
-
-            // FileRef を Stream に変換
-            var outputStream = new MemoryStream();
-            result.SaveAs(outputStream);
-            outputStream.Position = 0;
-
-            return outputStream;
+            stream.Position = 0;
+            return FileRef.CreateFromStream(stream, CombineFilesOperation.SupportedSourceFormat.PDF.GetMediaType());
         }
     }
 }

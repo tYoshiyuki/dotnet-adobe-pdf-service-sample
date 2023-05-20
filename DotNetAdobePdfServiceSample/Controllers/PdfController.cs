@@ -84,8 +84,13 @@ namespace DotNetAdobePdfServiceSample.Controllers
                 using var inputStream2 = new MemoryStream();
                 await file1.CopyToAsync(inputStream2);
 
+                var inputStreamList = new List<Stream>
+                {
+                    inputStream1, inputStream2
+                };
+
                 // マージ処理の実行
-                var outputStream = _adobePdfService.MergePdf(inputStream1, inputStream2);
+                var outputStream = _adobePdfService.MergePdfList(inputStreamList);
 
                 return File(outputStream, "application/octet-stream", fileDownloadName: "Merged" + DateTime.Now.Ticks + ".pdf");
             }
