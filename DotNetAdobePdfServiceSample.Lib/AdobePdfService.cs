@@ -92,5 +92,29 @@ namespace DotNetAdobePdfServiceSample.Lib
 
             return outputStream;
         }
+
+        /// <inheritdoc />
+        public Stream MergePdfList(IEnumerable<Stream> streams)
+        {
+            var combineFilesOperation = CombineFilesOperation.CreateNew();
+
+            // 入力ファイルを FileRef に変換
+            foreach (var stream in streams)
+            {
+                stream.Position = 0;
+                var source = FileRef.CreateFromStream(stream, CombineFilesOperation.SupportedSourceFormat.PDF.GetMediaType());
+                combineFilesOperation.AddInput(source);
+            }
+
+            // マージ処理の実行
+            var result = combineFilesOperation.Execute(_executionContext);
+
+            // FileRef を Stream に変換
+            var outputStream = new MemoryStream();
+            result.SaveAs(outputStream);
+            outputStream.Position = 0;
+
+            return outputStream;
+        }
     }
 }

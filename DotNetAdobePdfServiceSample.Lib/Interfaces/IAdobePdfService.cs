@@ -20,5 +20,12 @@
         /// <param name="stream2">マージ対象のストリーム2</param>
         /// <returns>変換結果のストリーム</returns>
         Stream MergePdf(Stream stream1, Stream stream2);
+
+        /// <summary>
+        /// PDFファイルリストをマージします。
+        /// </summary>
+        /// <param name="streams">マージ対象のストリームリスト</param>
+        /// <returns>変換結果のストリーム</returns>
+        Stream MergePdfList(IEnumerable<Stream> streams);
     }
 }

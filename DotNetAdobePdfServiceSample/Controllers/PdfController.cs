@@ -96,5 +96,54 @@ namespace DotNetAdobePdfServiceSample.Controllers
                 throw;
             }
         }
+
+        /// <summary>
+        /// PDFファイルリストをマージします。
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost("MergePdfList")]
+        [Produces("application/octet-stream", Type = typeof(FileResult))]
+        public async Task<IActionResult> MergePdfList([FromForm] MergePdfListRequest request)
+        {
+            List<MemoryStream> inputStreamList = new();
+
+            try
+            {
+                if (request.FileList.Count > 1)
+                {
+                    return Problem("Number of files must be 2 or more.", statusCode: (int)HttpStatusCode.BadRequest);
+                }
+
+                foreach (var file in request.FileList)
+                {
+                    string extension = Path.GetExtension(file.FileName);
+
+                    if (!extension.Contains(".pdf", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return Problem("File type must be pdf.", statusCode: (int)HttpStatusCode.BadRequest);
+                    }
+
+                    var inputStream = new MemoryStream();
+                    await file.CopyToAsync(inputStream);
+                    inputStreamList.Add(inputStream);
+                }
+
+                // マージ処理の実行
+                var outputStream = _adobePdfService.MergePdfList(inputStreamList);
+
+                return File(outputStream, "application/octet-stream", fileDownloadName: "Merged" + DateTime.Now.Ticks + ".pdf");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+                throw;
+            }
+            finally
+            {
+                inputStreamList.ForEach(x => x.Dispose());
+            }
+        }
     }
 }
