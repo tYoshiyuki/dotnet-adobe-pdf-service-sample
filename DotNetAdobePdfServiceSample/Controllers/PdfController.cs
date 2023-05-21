@@ -117,23 +117,29 @@ namespace DotNetAdobePdfServiceSample.Controllers
                     return Problem("Number of files must be 2 or more.", statusCode: (int)HttpStatusCode.BadRequest);
                 }
 
-                foreach (var file in request.FileList)
-                {
-                    string extension = Path.GetExtension(file.FileName);
-
-                    Stream inputStream;
-                    if (!extension.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
+                // 変換処理を並列処理で実施、マージ順番を保持するようにする
+                var convertTask = request.FileList
+                    .AsParallel()
+                    .AsOrdered()
+                    .Select(async x =>
                     {
-                        inputStream = await ConvertToPdfInternal(file);
-                    }
-                    else
-                    {
-                        inputStream = new MemoryStream();
-                        await file.CopyToAsync(inputStream);
-                    }
+                        string extension = Path.GetExtension(x.FileName);
 
-                    inputStreamList.Add(inputStream);
-                }
+                        Stream inputStream;
+                        if (!extension.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            inputStream = await ConvertToPdfInternal(x);
+                        }
+                        else
+                        {
+                            inputStream = new MemoryStream();
+                            await x.CopyToAsync(inputStream);
+                        }
+
+                        return inputStream;
+                    }).ToList();
+
+                inputStreamList = (await Task.WhenAll(convertTask)).ToList();
 
                 // マージ処理の実行
                 var outputStream = _adobePdfService.MergePdfList(inputStreamList);
