@@ -8,10 +8,16 @@
         /// <summary>
         /// PDFファイルへ変換します。
         /// </summary>
-        /// <param name="stream">変換対象のストリーム</param>
-        /// <param name="fileName">変換対象ファイル名</param>
+        /// <param name="convertToPdfInput"><see cref="ConvertToPdfInput"/></param>
         /// <returns>変換結果のストリーム</returns>
-        Stream ConvertToPdf(Stream stream, string fileName);
+        Stream ConvertToPdf(ConvertToPdfInput　convertToPdfInput);
+
+        /// <summary>
+        /// リストをPDFへ変換します。
+        /// </summary>
+        /// <param name="convertToPdfInputs"><see cref="ConvertToPdfInput"/>のリスト</param>
+        /// <returns>変換結果のストリームリスト</returns>
+        IEnumerable<Stream> ConvertToPdfList(IEnumerable<ConvertToPdfInput> convertToPdfInputs);
 
         /// <summary>
         /// PDFファイルリストをマージします。

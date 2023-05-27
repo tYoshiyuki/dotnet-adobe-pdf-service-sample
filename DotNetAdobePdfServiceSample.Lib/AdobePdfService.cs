@@ -23,9 +23,9 @@ namespace DotNetAdobePdfServiceSample.Lib
 
         /// <inheritdoc />
         /// <exception cref="AdobePdfServiceException"></exception>
-        public Stream ConvertToPdf(Stream stream, string fileName)
+        public Stream ConvertToPdf(ConvertToPdfInput convertToPdfInput)
         {
-            string extension = Path.GetExtension(fileName);
+            string extension = Path.GetExtension(convertToPdfInput.FileName);
             string mediaType;
 
             // NOTE 拡張子によってメディアタイプを選定します。必要に応じて判定処理を追加します。
@@ -51,8 +51,8 @@ namespace DotNetAdobePdfServiceSample.Lib
             }
 
             // 入力ファイルを FileRef に変換
-            stream.Position = 0;
-            var source = FileRef.CreateFromStream(stream, mediaType);
+            convertToPdfInput.Stream.Position = 0;
+            var source = FileRef.CreateFromStream(convertToPdfInput.Stream, mediaType);
 
             var createPdfOperation = CreatePDFOperation.CreateNew();
             createPdfOperation.SetInput(source);
@@ -66,6 +66,22 @@ namespace DotNetAdobePdfServiceSample.Lib
             outputStream.Position = 0;
 
             return outputStream;
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<Stream> ConvertToPdfList(IEnumerable<ConvertToPdfInput> convertToPdfListInputs)
+        {
+            // 変換処理を並列処理で実施、マージ順番を保持するようにする
+            return convertToPdfListInputs
+                .AsParallel()
+                .AsOrdered()
+                .Select(x =>
+                {
+                    // PDFファイルの場合は、そのままストリームを返却する
+                    string extension = Path.GetExtension(x.FileName);
+                    return !extension.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase)
+                        ? ConvertToPdf(x) : x.Stream;
+                }).ToList();
         }
 
         /// <inheritdoc />

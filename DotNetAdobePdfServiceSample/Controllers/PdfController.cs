@@ -117,29 +117,23 @@ namespace DotNetAdobePdfServiceSample.Controllers
                     return Problem("Number of files must be 2 or more.", statusCode: (int)HttpStatusCode.BadRequest);
                 }
 
-                // 変換処理を並列処理で実施、マージ順番を保持するようにする
-                var convertTask = request.FileList
-                    .AsParallel()
-                    .AsOrdered()
-                    .Select(async x =>
+                var inputTask = request.FileList.Select(async x =>
+                {
+                    var inputStream = new MemoryStream();
+                    await x.CopyToAsync(inputStream);
+
+                    return new ConvertToPdfInput
                     {
-                        string extension = Path.GetExtension(x.FileName);
+                        Stream = inputStream,
+                        FileName = x.FileName
+                    };
+                });
 
-                        Stream inputStream;
-                        if (!extension.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            inputStream = await ConvertToPdfInternal(x);
-                        }
-                        else
-                        {
-                            inputStream = new MemoryStream();
-                            await x.CopyToAsync(inputStream);
-                        }
+                var convertToPdfListInputs = await Task.WhenAll(inputTask);
 
-                        return inputStream;
-                    }).ToList();
-
-                inputStreamList = (await Task.WhenAll(convertTask)).ToList();
+                // 変換処理に実行
+                inputStreamList = _adobePdfService.ConvertToPdfList(convertToPdfListInputs)
+                    .ToList();
 
                 // マージ処理の実行
                 var outputStream = _adobePdfService.MergePdfList(inputStreamList);
@@ -167,7 +161,11 @@ namespace DotNetAdobePdfServiceSample.Controllers
         {
             var inputStream = new MemoryStream();
             await file.CopyToAsync(inputStream);
-            return _adobePdfService.ConvertToPdf(inputStream, file.FileName);
+            return _adobePdfService.ConvertToPdf(new ConvertToPdfInput
+            {
+                Stream = inputStream,
+                FileName = file.FileName
+            });
         }
     }
 }
