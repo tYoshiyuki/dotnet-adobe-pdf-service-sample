@@ -1,6 +1,7 @@
 using DotNetAdobePdfServiceSample.Lib.Interfaces;
 using System.Reflection;
 using DotNetAdobePdfServiceSample.Lib;
+using Microsoft.Extensions.Options;
 
 namespace DotNetAdobePdfServiceSample
 {
@@ -9,8 +10,16 @@ namespace DotNetAdobePdfServiceSample
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            var configuration = builder.Configuration;
 
-            builder.Services.AddTransient<IExecutionContextFactory>(provider => new ExecutionContextFactory(provider.GetRequiredService<IHostEnvironment>().ContentRootPath));
+            builder.Services.Configure<AdobePdfServiceSettings>(configuration.GetSection("AdobePdfServiceSettings"));
+
+            // NOTE appsettings.json ‚©‚çİ’è‚ğæ“¾‚·‚éê‡
+            builder.Services.AddTransient<IExecutionContextFactory>(provider => new ExecutionContextFactory(provider.GetRequiredService<IOptions<AdobePdfServiceSettings>>().Value));
+
+            // NOTE pdfservices-api-credentials.json ‚Æ private.key ‚©‚çİ’è‚ğæ“¾‚·‚éê‡
+            //builder.Services.AddTransient<IExecutionContextFactory>(provider => new ExecutionContextFactory(provider.GetRequiredService<IHostEnvironment>().ContentRootPath));
+
             builder.Services.AddSingleton(provider => provider.GetRequiredService<IExecutionContextFactory>().Create());
             builder.Services.AddTransient<IAdobePdfService, AdobePdfService>();
 
