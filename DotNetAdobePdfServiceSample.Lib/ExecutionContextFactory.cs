@@ -26,15 +26,15 @@ namespace DotNetAdobePdfServiceSample.Lib
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        /// <param name="settings"><see cref="AdobePdfServiceSettings"/></param>
-        public ExecutionContextFactory(AdobePdfServiceSettings settings)
+        /// <param name="setting"><see cref="AdobePdfServiceSetting"/></param>
+        public ExecutionContextFactory(AdobePdfServiceSetting setting)
         {
             _credentials = Credentials.ServiceAccountCredentialsBuilder()
-                .WithClientId(settings.ClientId)
-                .WithClientSecret(settings.ClientSecret)
-                .WithOrganizationId(settings.OrganizationId)
-                .WithAccountId(settings.AccountId)
-                .WithPrivateKey(settings.PrivateKey)
+                .WithClientId(setting.ClientId)
+                .WithClientSecret(setting.ClientSecret)
+                .WithOrganizationId(setting.OrganizationId)
+                .WithAccountId(setting.AccountId)
+                .WithPrivateKey(setting.PrivateKey)
                 .Build();
         }
 

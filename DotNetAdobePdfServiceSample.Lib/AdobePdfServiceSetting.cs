@@ -3,7 +3,7 @@
     /// <summary>
     /// <see cref="AdobePdfService"/> の設定
     /// </summary>
-    public class AdobePdfServiceSettings
+    public class AdobePdfServiceSetting
     {
         /// <summary>
         /// ClientId
