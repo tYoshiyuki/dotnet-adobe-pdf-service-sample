@@ -69,10 +69,10 @@ namespace DotNetAdobePdfServiceSample.Lib
         }
 
         /// <inheritdoc />
-        public IEnumerable<Stream> ConvertToPdfList(IEnumerable<ConvertToPdfInput> convertToPdfListInputs)
+        public IEnumerable<Stream> ConvertToPdfList(IEnumerable<ConvertToPdfInput> convertToPdfInputs)
         {
             // 変換処理を並列処理で実施、マージ順番を保持するようにする
-            return convertToPdfListInputs
+            return convertToPdfInputs
                 .AsParallel()
                 .AsOrdered()
                 .Select(x =>
