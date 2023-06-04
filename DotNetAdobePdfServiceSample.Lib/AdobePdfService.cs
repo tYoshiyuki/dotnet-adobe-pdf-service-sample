@@ -25,6 +25,88 @@ namespace DotNetAdobePdfServiceSample.Lib
         /// <exception cref="AdobePdfServiceException"></exception>
         public Stream ConvertToPdf(ConvertToPdfInput convertToPdfInput)
         {
+            try
+            {
+                return ConvertToPdfInternal(convertToPdfInput);
+            }
+            catch (Exception ex)
+            {
+                throw new AdobePdfServiceException("ConvertToPdf failed.", ex);
+            }
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<Stream> ConvertToPdfList(IEnumerable<ConvertToPdfInput> convertToPdfInputs)
+        {
+            try
+            {
+                // 変換処理を並列処理で実施、マージ順番を保持するようにする
+                return convertToPdfInputs
+                    .AsParallel()
+                    .AsOrdered()
+                    .Select(x =>
+                    {
+                        // PDFファイルの場合は、そのままストリームを返却する
+                        string extension = Path.GetExtension(x.FileName);
+                        return !extension.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase)
+                            ? ConvertToPdf(x)
+                            : x.Stream;
+                    }).ToList();
+            }
+            catch (Exception ex)
+            {
+                throw new AdobePdfServiceException("ConvertToPdfList failed.", ex);
+            }
+        }
+
+        /// <inheritdoc />
+        public Stream MergePdfList(IEnumerable<Stream> streams)
+        {
+            try
+            {
+                var combineFilesOperation = CombineFilesOperation.CreateNew();
+
+                // 入力ファイルを FileRef に変換
+                foreach (var stream in streams)
+                {
+                    combineFilesOperation.AddInput(CreateMergePdfFileRef(stream));
+                }
+
+                // マージ処理の実行
+                var result = combineFilesOperation.Execute(_executionContext);
+
+                // FileRef を Stream に変換
+                var outputStream = new MemoryStream();
+                result.SaveAs(outputStream);
+                outputStream.Position = 0;
+
+                return outputStream;
+            }
+            catch (Exception ex)
+            {
+                throw new AdobePdfServiceException("MergePdfList failed.", ex);
+            }
+        }
+
+        /// <summary>
+        /// PDFマージ向けに<see cref="Stream"/>を元に<see cref="FileRef"/>を生成します。
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <returns><see cref="FileRef"/></returns>
+        private static FileRef CreateMergePdfFileRef(Stream stream)
+        {
+            stream.Position = 0;
+            return FileRef.CreateFromStream(stream, CombineFilesOperation.SupportedSourceFormat.PDF.GetMediaType());
+        }
+
+        /// <summary>
+        /// PDFファイルへ変換する内部処理です。
+        /// </summary>
+        /// <param name="convertToPdfInput"><see cref="ConvertToPdfInput"/></param>
+        /// <returns>変換結果のストリーム</returns>
+        /// <exception cref="AdobePdfServiceException"></exception>
+        private Stream ConvertToPdfInternal(ConvertToPdfInput convertToPdfInput)
+        {
             string extension = Path.GetExtension(convertToPdfInput.FileName);
             string mediaType;
 
@@ -47,7 +129,7 @@ namespace DotNetAdobePdfServiceSample.Lib
             }
             else
             {
-                throw new AdobePdfServiceException($"Not supported file type:{extension}.");
+                throw new ArgumentException($"Not supported file type:{extension}.");
             }
 
             // 入力ファイルを FileRef に変換
@@ -66,55 +148,6 @@ namespace DotNetAdobePdfServiceSample.Lib
             outputStream.Position = 0;
 
             return outputStream;
-        }
-
-        /// <inheritdoc />
-        public IEnumerable<Stream> ConvertToPdfList(IEnumerable<ConvertToPdfInput> convertToPdfInputs)
-        {
-            // 変換処理を並列処理で実施、マージ順番を保持するようにする
-            return convertToPdfInputs
-                .AsParallel()
-                .AsOrdered()
-                .Select(x =>
-                {
-                    // PDFファイルの場合は、そのままストリームを返却する
-                    string extension = Path.GetExtension(x.FileName);
-                    return !extension.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase)
-                        ? ConvertToPdf(x) : x.Stream;
-                }).ToList();
-        }
-
-        /// <inheritdoc />
-        public Stream MergePdfList(IEnumerable<Stream> streams)
-        {
-            var combineFilesOperation = CombineFilesOperation.CreateNew();
-
-            // 入力ファイルを FileRef に変換
-            foreach (var stream in streams)
-            {
-                combineFilesOperation.AddInput(CreateMergePdfFileRef(stream));
-            }
-
-            // マージ処理の実行
-            var result = combineFilesOperation.Execute(_executionContext);
-
-            // FileRef を Stream に変換
-            var outputStream = new MemoryStream();
-            result.SaveAs(outputStream);
-            outputStream.Position = 0;
-
-            return outputStream;
-        }
-
-        /// <summary>
-        /// PDFマージ向けに<see cref="Stream"/>を元に<see cref="FileRef"/>を生成します。
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <returns></returns>
-        private static FileRef CreateMergePdfFileRef(Stream stream)
-        {
-            stream.Position = 0;
-            return FileRef.CreateFromStream(stream, CombineFilesOperation.SupportedSourceFormat.PDF.GetMediaType());
         }
     }
 }
