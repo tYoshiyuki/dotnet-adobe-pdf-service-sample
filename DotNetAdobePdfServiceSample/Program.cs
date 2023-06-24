@@ -5,12 +5,19 @@ using Microsoft.Extensions.Options;
 
 namespace DotNetAdobePdfServiceSample
 {
+    /// <summary>
+    /// Program
+    /// </summary>
     public class Program
     {
+        /// <summary>
+        /// Main
+        /// </summary>
+        /// <param name="args"></param>
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
-            var configuration = builder.Configuration;
+            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+            ConfigurationManager configuration = builder.Configuration;
 
             builder.Services.Configure<List<AdobePdfServiceSetting>>(configuration.GetSection("AdobePdfServiceSettingList"));
 
@@ -33,7 +40,7 @@ namespace DotNetAdobePdfServiceSample
                 options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
             });
 
-            var app = builder.Build();
+            WebApplication app = builder.Build();
 
             if (app.Environment.IsDevelopment())
             {
