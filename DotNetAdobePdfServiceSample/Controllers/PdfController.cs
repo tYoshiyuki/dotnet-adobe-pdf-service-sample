@@ -117,19 +117,15 @@ namespace DotNetAdobePdfServiceSample.Controllers
                     return Problem("Number of files must be 2 or more.", statusCode: (int)HttpStatusCode.BadRequest);
                 }
 
-                var inputTask = request.FileList.Select(async x =>
+                IEnumerable<Task<ConvertToPdfInput>> inputTask = request.FileList.Select(async x =>
                 {
                     var inputStream = new MemoryStream();
                     await x.CopyToAsync(inputStream);
 
-                    return new ConvertToPdfInput
-                    {
-                        Stream = inputStream,
-                        FileName = x.FileName
-                    };
+                    return new ConvertToPdfInput(inputStream, x.FileName);
                 });
 
-                var convertToPdfListInputs = await Task.WhenAll(inputTask);
+                ConvertToPdfInput[] convertToPdfListInputs = await Task.WhenAll(inputTask);
 
                 // 変換処理に実行
                 inputStreamList = _adobePdfService.ConvertToPdfList(convertToPdfListInputs)
@@ -161,11 +157,7 @@ namespace DotNetAdobePdfServiceSample.Controllers
         {
             var inputStream = new MemoryStream();
             await file.CopyToAsync(inputStream);
-            return _adobePdfService.ConvertToPdf(new ConvertToPdfInput
-            {
-                Stream = inputStream,
-                FileName = file.FileName
-            });
+            return _adobePdfService.ConvertToPdf(new ConvertToPdfInput(inputStream, file.FileName));
         }
     }
 }
