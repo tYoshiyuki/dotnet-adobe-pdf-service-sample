@@ -14,20 +14,5 @@
         /// ClientSecret
         /// </summary>
         public string? ClientSecret { get; set; }
-
-        /// <summary>
-        /// OrganizationId
-        /// </summary>
-        public string? OrganizationId { get; set; }
-
-        /// <summary>
-        /// AccountId
-        /// </summary>
-        public string? AccountId { get; set; }
-
-        /// <summary>
-        /// PrivateKey
-        /// </summary>
-        public string? PrivateKey { get; set; }
     }
 }

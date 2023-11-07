@@ -13,4 +13,3 @@ Adobe PDF Servies API を用いてPDFファイルの変換、マージを行う�
 - 以下で実装しています。
   - ASP.NET Core / .NET6
 - 別途、Adobe Developer Console でクレデンシャルを取得する必要があります。
-  - Adobe Developer Console で取得した `pdfservices-api-credentials.json` `private.key` で上書きを行ってください。

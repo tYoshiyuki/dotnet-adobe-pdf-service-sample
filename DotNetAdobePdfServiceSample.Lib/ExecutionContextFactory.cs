@@ -14,27 +14,12 @@ namespace DotNetAdobePdfServiceSample.Lib
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        /// <param name="rootPath">設定ファイルのルートパス</param>
-        public ExecutionContextFactory(string rootPath)
-        {
-            // NOTE pdfservices-api-credentials.json と private.key は同一階層である必要があります。
-            _credentials = Credentials.ServiceAccountCredentialsBuilder()
-                .FromFile(Path.Combine(rootPath, "pdfservices-api-credentials.json"))
-                .Build();
-        }
-
-        /// <summary>
-        /// コンストラクタ
-        /// </summary>
         /// <param name="setting"><see cref="AdobePdfServiceSetting"/></param>
         public ExecutionContextFactory(AdobePdfServiceSetting setting)
         {
-            _credentials = Credentials.ServiceAccountCredentialsBuilder()
+            _credentials = Credentials.ServicePrincipalCredentialsBuilder()
                 .WithClientId(setting.ClientId)
                 .WithClientSecret(setting.ClientSecret)
-                .WithOrganizationId(setting.OrganizationId)
-                .WithAccountId(setting.AccountId)
-                .WithPrivateKey(setting.PrivateKey)
                 .Build();
         }
 

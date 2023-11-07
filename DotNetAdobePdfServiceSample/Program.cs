@@ -24,9 +24,6 @@ namespace DotNetAdobePdfServiceSample
             // NOTE appsettings.json ‚©‚çİ’è‚ğæ“¾‚·‚éê‡
             builder.Services.AddTransient<IExecutionContextFactory>(provider => new ExecutionContextFactory(provider.GetRequiredService<IOptions<AdobePdfServiceSetting>>().Value));
 
-            // NOTE pdfservices-api-credentials.json ‚Æ private.key ‚©‚çİ’è‚ğæ“¾‚·‚éê‡
-            //builder.Services.AddTransient<IExecutionContextFactory>(provider => new ExecutionContextFactory(provider.GetRequiredService<IHostEnvironment>().ContentRootPath));
-
             builder.Services.AddTransient(provider => provider.GetRequiredService<IExecutionContextFactory>().Create());
             builder.Services.AddTransient<IAdobePdfService, AdobePdfService>();
 
