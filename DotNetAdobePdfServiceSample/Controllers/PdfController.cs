@@ -42,7 +42,7 @@ namespace DotNetAdobePdfServiceSample.Controllers
             }
             catch (AdobePdfServiceException ex)
             {
-                return Problem(ex.Message, statusCode: (int)HttpStatusCode.BadRequest);
+                return Problem($"{ex.Message}:[{ex.ErrorType}][{ex.StatusCode}/{ex.ErrorCode}]", statusCode: (int)HttpStatusCode.BadRequest);
             }
             catch (Exception ex)
             {
